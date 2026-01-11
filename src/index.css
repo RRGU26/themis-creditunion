@@ -1,0 +1,94 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
+/* Custom theme colors */
+@theme {
+  --color-deep-navy: #07172B;
+  --color-navy: #003366;
+  --color-teal: #11A5BD;
+  --color-bright-blue: #0099CC;
+  --color-soft-grey: #F6F9FC;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #F6F9FC;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', system-ui, sans-serif;
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Line clamp utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Responsive layout - stack columns on smaller screens */
+@media (max-width: 1024px) {
+  main {
+    grid-template-columns: 1fr !important;
+  }
+
+  main > div:first-child {
+    max-height: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  main {
+    padding: 10px !important;
+    gap: 12px !important;
+  }
+
+  main > div > div {
+    padding: 12px !important;
+  }
+
+  header {
+    padding: 10px 12px !important;
+  }
+}
