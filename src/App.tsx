@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { RefreshCw, FileText, Calendar, Building2, TrendingUp, AlertTriangle, ChevronRight, X, ExternalLink, Clock, Loader2, Filter, ArrowUpDown, ChevronDown, ChevronUp, MessageSquare, Newspaper, Gavel, FileEdit, BookOpen, Mic, Mail, Bell, Scale } from 'lucide-react';
+import { RefreshCw, FileText, Calendar, Building2, TrendingUp, AlertTriangle, ChevronRight, X, ExternalLink, Clock, Loader2, Filter, ChevronDown, ChevronUp, Newspaper, Gavel, FileEdit, BookOpen, Mic, Mail, Bell, Scale } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDocuments } from './hooks/useDocuments';
 import { useDailyBrief } from './hooks/useDailyBrief';
@@ -43,17 +43,14 @@ const getDocTypeStyle = (docType: string) => {
   return DOC_TYPE_STYLES[docType] || { bg: '#F5F3FF', text: '#6D28D9', border: '#DDD6FE', Icon: FileText };
 };
 
-type SortOption = 'date';
-
 function App() {
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [agencyFilter, setAgencyFilter] = useState<string>('all');
   const [docTypeFilter, setDocTypeFilter] = useState<string>('all');
   const [domainFilter, setDomainFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('all'); // all, today, week, month
-  const [sortBy] = useState<SortOption>('date'); // Default to most recent
   const [offset, setOffset] = useState(0);
-  const limit = 50;
+  const [limit, setLimit] = useState(50);
   const queryClient = useQueryClient();
 
   const { data: docsData, isLoading: docsLoading, error: docsError, isFetching } = useDocuments({
@@ -234,6 +231,8 @@ function App() {
                 domain: setDomainFilter,
                 date: setDateFilter,
               }}
+              limit={limit}
+              onLimitChange={(newLimit) => { setLimit(newLimit); setOffset(0); }}
               pagination={{ currentPage, totalPages, hasMore, onNext: handleLoadMore, onPrev: handlePrevPage, offset }}
             />
           </div>
@@ -344,11 +343,11 @@ function DailyBriefPanel({ brief, isLoading, history, sentimentData }: { brief: 
         cleanHtml = cleanHtml.replace(/New Documents \(24hrs\)[\s\S]*?News Articles/gi, '');
         cleanHtml = cleanHtml.replace(/View Full Dashboard\s*→?/gi, '');
 
-        // Remove any colored bar/header elements (purple, blue, etc)
-        cleanHtml = cleanHtml.replace(/<div[^>]*style="[^"]*background[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
-        cleanHtml = cleanHtml.replace(/<table[^>]*style="[^"]*background[^"]*"[^>]*>[\s\S]*?<\/table>/gi, '');
-        cleanHtml = cleanHtml.replace(/<tr[^>]*style="[^"]*background[^"]*"[^>]*>[\s\S]*?<\/tr>/gi, '');
-        cleanHtml = cleanHtml.replace(/<td[^>]*style="[^"]*background[^"]*#[^"]*"[^>]*>[\s\S]*?<\/td>/gi, '');
+        // Note: Don't strip background styles - the weekly email needs them for formatting
+
+        // Remove priority scores from document listings
+        cleanHtml = cleanHtml.replace(/<span[^>]*>Priority:\s*\d+<\/span>/gi, '');
+        cleanHtml = cleanHtml.replace(/Priority:\s*\d+/gi, '');
 
         // Remove "Daily Activity Overview" header if duplicated
         cleanHtml = cleanHtml.replace(/<[^>]*>.*?Daily\s+Activity\s+Overview.*?<\/[^>]*>/gi, '');
@@ -636,7 +635,7 @@ const selectStyle: React.CSSProperties = {
 };
 
 // Priority Queue Component
-function PriorityQueue({ documents, isLoading, isFetching, error, onDocumentClick, total, filteredCount, filters, filterOptions, onFilterChange, pagination }: {
+function PriorityQueue({ documents, isLoading, isFetching, error, onDocumentClick, total, filteredCount, filters, filterOptions, onFilterChange, limit, onLimitChange, pagination: _pagination }: {
   documents: Document[] | undefined;
   isLoading: boolean;
   isFetching?: boolean;
@@ -652,6 +651,8 @@ function PriorityQueue({ documents, isLoading, isFetching, error, onDocumentClic
     domain: (v: string) => void;
     date: (v: string) => void;
   };
+  limit?: number;
+  onLimitChange?: (limit: number) => void;
   pagination?: { currentPage: number; totalPages: number; hasMore: boolean; onNext: () => void; onPrev: () => void; offset: number };
 }) {
   if (isLoading) {
@@ -719,6 +720,15 @@ function PriorityQueue({ documents, isLoading, isFetching, error, onDocumentClic
             <option value="week">Past Week</option>
             <option value="month">Past Month</option>
           </select>
+
+          {/* Limit Selector */}
+          {onLimitChange && (
+            <select value={limit || 50} onChange={(e) => onLimitChange(parseInt(e.target.value))} style={selectStyle}>
+              <option value={25}>25 items</option>
+              <option value={50}>50 items</option>
+              <option value={100}>100 items</option>
+            </select>
+          )}
 
           {hasActiveFilters && (
             <button
