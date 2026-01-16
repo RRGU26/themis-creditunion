@@ -56,6 +56,22 @@ export interface BriefHistoryResponse {
   };
 }
 
+export interface TwitterSignal {
+  id: string;
+  authorUsername: string;
+  authorName: string;
+  text: string;
+  createdAt: string;
+  accountType: string;
+}
+
+export interface NewsItem {
+  title: string;
+  source: string;
+  publishedDate: string;
+  url: string;
+}
+
 export interface DailyBrief {
   date: string;
   summary: {
@@ -94,6 +110,8 @@ export interface DailyBrief {
     aiSummary: string;
     generatedAt: string;
   } | null;
+  twitterSignals?: TwitterSignal[];
+  bankingNews?: NewsItem[];
 }
 
 export interface SentimentData {

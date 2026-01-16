@@ -264,9 +264,9 @@ function DailyBriefPanel({ brief, isLoading, history, sentimentData }: { brief: 
     return <div style={{ color: '#6B7280', textAlign: 'center', padding: '32px' }}>No brief available</div>;
   }
 
-  const formattedDate = new Date(brief.date).toLocaleDateString('en-US', {
-    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
-  });
+  // Extract week date range from email subject (e.g., "January 5 - January 11, 2026")
+  const weekDateRange = brief.emailContent?.subject?.match(/\|\s*(.+)$/)?.[1] ||
+    new Date(brief.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
   const agencyEntries = Object.entries(brief.summary.byAgency || {}).sort((a, b) => b[1] - a[1]);
   const typeEntries = Object.entries(brief.summary.byType || {}).sort((a, b) => b[1] - a[1]);
@@ -274,16 +274,12 @@ function DailyBriefPanel({ brief, isLoading, history, sentimentData }: { brief: 
 
   return (
     <div>
-      {/* Header */}
+      {/* Header - Show week date range */}
       <div style={{ marginBottom: '14px' }}>
         <h2 style={{ fontSize: '16px', fontWeight: 600, color: COLORS.deepNavy, display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
           <FileText size={18} style={{ color: COLORS.teal }} />
-          Daily Intelligence Brief
+          {weekDateRange}
         </h2>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#6B7280', fontSize: '12px', marginTop: '4px' }}>
-          <Calendar size={14} />
-          {formattedDate}
-        </div>
       </div>
 
       {/* Four Stat Tiles */}
@@ -317,6 +313,20 @@ function DailyBriefPanel({ brief, isLoading, history, sentimentData }: { brief: 
       {/* Full Email Content - Strip duplicate sections */}
       {brief.emailContent && (() => {
         let cleanHtml = brief.emailContent.html;
+
+        // Remove "Credit Union Weekly Intelligence" header and its container
+        cleanHtml = cleanHtml.replace(/<h1[^>]*>Credit Union Weekly Intelligence<\/h1>/gi, '');
+        cleanHtml = cleanHtml.replace(/Credit Union Weekly Intelligence/gi, '');
+
+        // Remove the date line (e.g., "January 5 - January 11, 2026")
+        cleanHtml = cleanHtml.replace(/<p[^>]*>\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+\s*-\s*(January|February|March|April|May|June|July|August|September|October|November|December)?\s*\d+,?\s*\d{4}\s*<\/p>/gi, '');
+
+        // Remove the gradient header section entirely (contains title and date)
+        cleanHtml = cleanHtml.replace(/<tr>\s*<td[^>]*style="[^"]*background:\s*linear-gradient[^"]*"[^>]*>[\s\S]*?<\/td>\s*<\/tr>/gi, '');
+
+        // Remove the metrics bar (NCUA Docs, High Priority, Twitter Signals, Sentiment)
+        cleanHtml = cleanHtml.replace(/<tr>\s*<td[^>]*style="[^"]*padding:\s*0\s*32px\s*24px[^"]*"[^>]*>[\s\S]*?NCUA Docs[\s\S]*?<\/td>\s*<\/tr>/gi, '');
+        cleanHtml = cleanHtml.replace(/<table[^>]*style="[^"]*background:\s*#F8FAFC[^"]*"[^>]*>[\s\S]*?<\/table>/gi, '');
 
         // Remove "Daily Regulatory Intelligence Brief [Date]" header
         cleanHtml = cleanHtml.replace(/<h[1-3][^>]*>.*?Daily\s+Regulatory\s+Intelligence\s+Brief.*?<\/h[1-3]>/gis, '');
@@ -554,6 +564,44 @@ function DailyBriefPanel({ brief, isLoading, history, sentimentData }: { brief: 
                     <h4 style={{ fontSize: '13px', fontWeight: 500, color: COLORS.deepNavy, margin: '0 0 6px 0' }}>{item.title}</h4>
                     <p style={{ fontSize: '11px', color: '#6B7280', margin: 0, lineHeight: 1.5 }}>
                       {item.summary?.substring(0, 200)}...
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* CU Twitter Signals */}
+          {brief.twitterSignals && brief.twitterSignals.length > 0 && (
+            <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #E5E7EB' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: 600, color: COLORS.deepNavy, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <TrendingUp size={14} style={{ color: '#1DA1F2' }} />
+                Credit Union Twitter/X Signals
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {brief.twitterSignals.slice(0, 8).map((tweet) => (
+                  <div key={tweet.id} style={{
+                    padding: '10px 12px', backgroundColor: COLORS.softGrey, borderRadius: '6px',
+                    borderLeft: `3px solid ${tweet.accountType === 'regulator' ? '#DC2626' : tweet.accountType === 'trade_group' ? '#7C3AED' : '#1DA1F2'}`
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: COLORS.deepNavy }}>@{tweet.authorUsername}</span>
+                        <span style={{
+                          fontSize: '9px', padding: '2px 6px', borderRadius: '3px',
+                          backgroundColor: tweet.accountType === 'regulator' ? '#FEE2E2' : tweet.accountType === 'trade_group' ? '#F3E8FF' : '#E0F2FE',
+                          color: tweet.accountType === 'regulator' ? '#DC2626' : tweet.accountType === 'trade_group' ? '#7C3AED' : '#0369A1',
+                          textTransform: 'uppercase', fontWeight: 600
+                        }}>
+                          {tweet.accountType === 'regulator' ? 'NCUA' : tweet.accountType === 'trade_group' ? 'Trade' : 'News'}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '10px', color: '#9CA3AF' }}>
+                        {new Date(tweet.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '11px', color: '#374151', lineHeight: 1.5, margin: 0 }}>
+                      {tweet.text.length > 200 ? tweet.text.substring(0, 200) + '...' : tweet.text}
                     </p>
                   </div>
                 ))}
