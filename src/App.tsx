@@ -891,6 +891,42 @@ function PriorityQueue({ documents, isLoading, isFetching, error, onDocumentClic
               <ChevronRight size={16} style={{ color: '#9CA3AF', flexShrink: 0, marginLeft: '8px' }} />
             </div>
           ))}
+
+          {/* Pagination Buttons */}
+          {_pagination && (_pagination.currentPage > 1 || _pagination.hasMore) && (
+            <div style={{
+              display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px',
+              paddingTop: '12px', marginTop: '8px', borderTop: '1px solid #E5E7EB'
+            }}>
+              <button
+                onClick={_pagination.onPrev}
+                disabled={_pagination.currentPage <= 1}
+                style={{
+                  padding: '8px 16px', borderRadius: '6px', border: '1px solid #E5E7EB',
+                  backgroundColor: _pagination.currentPage <= 1 ? '#F3F4F6' : 'white',
+                  color: _pagination.currentPage <= 1 ? '#9CA3AF' : COLORS.deepNavy,
+                  fontSize: '12px', fontWeight: 500, cursor: _pagination.currentPage <= 1 ? 'not-allowed' : 'pointer'
+                }}
+              >
+                Previous {limit}
+              </button>
+              <span style={{ fontSize: '12px', color: '#6B7280' }}>
+                Page {_pagination.currentPage} of {_pagination.totalPages}
+              </span>
+              <button
+                onClick={_pagination.onNext}
+                disabled={!_pagination.hasMore}
+                style={{
+                  padding: '8px 16px', borderRadius: '6px', border: '1px solid #E5E7EB',
+                  backgroundColor: !_pagination.hasMore ? '#F3F4F6' : COLORS.teal,
+                  color: !_pagination.hasMore ? '#9CA3AF' : 'white',
+                  fontSize: '12px', fontWeight: 500, cursor: !_pagination.hasMore ? 'not-allowed' : 'pointer'
+                }}
+              >
+                Next {limit}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
