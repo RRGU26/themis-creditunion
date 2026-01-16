@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { RefreshCw, FileText, Calendar, Building2, TrendingUp, AlertTriangle, ChevronRight, X, ExternalLink, Clock, Loader2, Filter, ArrowUpDown, ChevronDown, ChevronUp, MessageSquare, Newspaper } from 'lucide-react';
+import { RefreshCw, FileText, Calendar, Building2, TrendingUp, AlertTriangle, ChevronRight, X, ExternalLink, Clock, Loader2, Filter, ArrowUpDown, ChevronDown, ChevronUp, MessageSquare, Newspaper, Gavel, FileEdit, BookOpen, Mic, Mail, Bell, Scale } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDocuments } from './hooks/useDocuments';
 import { useDailyBrief } from './hooks/useDailyBrief';
@@ -22,6 +22,25 @@ const BADGE_STYLES = {
   docType: { bg: '#F5F3FF', text: '#6D28D9', border: '#DDD6FE' },     // Purple
   domain: { bg: '#F0FDFA', text: '#0F766E', border: '#99F6E4' },      // Teal
   date: { bg: '#F9FAFB', text: '#374151', border: '#E5E7EB' },        // Gray
+};
+
+// Document type specific styles with colors and icons
+const DOC_TYPE_STYLES: Record<string, { bg: string; text: string; border: string; Icon: any }> = {
+  'Enforcement Action': { bg: '#FEE2E2', text: '#DC2626', border: '#FECACA', Icon: Scale },
+  'Final Rule': { bg: '#EDE9FE', text: '#7C3AED', border: '#DDD6FE', Icon: Gavel },
+  'Proposed Rule': { bg: '#DBEAFE', text: '#2563EB', border: '#BFDBFE', Icon: FileEdit },
+  'Guidance': { bg: '#CCFBF1', text: '#0D9488', border: '#99F6E4', Icon: BookOpen },
+  'Letter to Credit Unions': { bg: '#E0E7FF', text: '#4F46E5', border: '#C7D2FE', Icon: Mail },
+  'Board Action': { bg: '#E0F2FE', text: '#0369A1', border: '#BAE6FD', Icon: Building2 },
+  'Speech/Testimony': { bg: '#FEF3C7', text: '#D97706', border: '#FDE68A', Icon: Mic },
+  'Speech': { bg: '#FEF3C7', text: '#D97706', border: '#FDE68A', Icon: Mic },
+  'Press Release': { bg: '#F3F4F6', text: '#6B7280', border: '#E5E7EB', Icon: Newspaper },
+  'Notice': { bg: '#F3F4F6', text: '#6B7280', border: '#E5E7EB', Icon: Bell },
+};
+
+// Helper to get document type style
+const getDocTypeStyle = (docType: string) => {
+  return DOC_TYPE_STYLES[docType] || { bg: '#F5F3FF', text: '#6D28D9', border: '#DDD6FE', Icon: FileText };
 };
 
 type SortOption = 'date';
@@ -650,9 +669,9 @@ function PriorityQueue({ documents, isLoading, isFetching, error, onDocumentClic
   const hasActiveFilters = filters && (filters.agency !== 'all' || filters.docType !== 'all' || filters.domain !== 'all' || filters.date !== 'all');
 
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexShrink: 0 }}>
         <h2 style={{ fontSize: '15px', fontWeight: 600, color: COLORS.deepNavy, display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
           <FileText size={16} style={{ color: COLORS.teal }} />
           Regulatory Developments
@@ -667,7 +686,8 @@ function PriorityQueue({ documents, isLoading, isFetching, error, onDocumentClic
       {filters && filterOptions && onFilterChange && (
         <div style={{
           display: 'flex', gap: '8px', marginBottom: '12px', padding: '10px',
-          backgroundColor: COLORS.softGrey, borderRadius: '6px', flexWrap: 'wrap', alignItems: 'center'
+          backgroundColor: COLORS.softGrey, borderRadius: '6px', flexWrap: 'wrap', alignItems: 'center',
+          flexShrink: 0
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <Filter size={12} style={{ color: '#6B7280' }} />
@@ -720,51 +740,29 @@ function PriorityQueue({ documents, isLoading, isFetching, error, onDocumentClic
         </div>
       )}
 
-      {/* Pagination Info */}
-      {pagination && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <span style={{ fontSize: '11px', color: '#6B7280' }}>
-            Showing {pagination.offset + 1}-{Math.min(pagination.offset + (filteredCount || 0), total || 0)} of {total?.toLocaleString()}
+      {/* Count Info */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexShrink: 0 }}>
+        <span style={{ fontSize: '11px', color: '#6B7280' }}>
+          Showing {filteredCount || 0} of {total?.toLocaleString()} documents
+        </span>
+        {hasActiveFilters && (
+          <span style={{ fontSize: '10px', color: COLORS.teal, fontWeight: 500 }}>
+            Filters applied
           </span>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button
-              onClick={pagination.onPrev}
-              disabled={pagination.offset === 0}
-              style={{
-                padding: '4px 10px', borderRadius: '4px', border: '1px solid #D1D5DB',
-                backgroundColor: pagination.offset === 0 ? '#F3F4F6' : 'white',
-                color: pagination.offset === 0 ? '#9CA3AF' : COLORS.deepNavy,
-                fontSize: '11px', fontWeight: 500, cursor: pagination.offset === 0 ? 'not-allowed' : 'pointer'
-              }}
-            >
-              Prev
-            </button>
-            <span style={{ padding: '4px 8px', fontSize: '11px', color: '#6B7280' }}>
-              {pagination.currentPage}/{pagination.totalPages}
-            </span>
-            <button
-              onClick={pagination.onNext}
-              disabled={!pagination.hasMore}
-              style={{
-                padding: '4px 10px', borderRadius: '4px', border: '1px solid #D1D5DB',
-                backgroundColor: !pagination.hasMore ? '#F3F4F6' : 'white',
-                color: !pagination.hasMore ? '#9CA3AF' : COLORS.deepNavy,
-                fontSize: '11px', fontWeight: 500, cursor: !pagination.hasMore ? 'not-allowed' : 'pointer'
-              }}
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Document List */}
+      {/* Document List - Scrollable */}
       {(!documents || documents.length === 0) ? (
-        <div style={{ color: '#6B7280', textAlign: 'center', padding: '24px', fontSize: '13px' }}>
+        <div style={{ color: '#6B7280', textAlign: 'center', padding: '24px', fontSize: '13px', flex: 1 }}>
           {hasActiveFilters ? 'No documents match your filters' : 'No documents found'}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, overflowY: 'auto' }}>
+        <div style={{
+          display: 'flex', flexDirection: 'column', gap: '8px',
+          flex: 1, overflowY: 'auto', minHeight: 0,
+          paddingRight: '8px'  /* Space for scrollbar */
+        }}>
           {documents.map((doc) => (
             <div
               key={doc.id}
@@ -796,20 +794,26 @@ function PriorityQueue({ documents, isLoading, isFetching, error, onDocumentClic
                   }}>
                     {new Date(doc.publishedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
-                  {/* Document Type Badge */}
-                  {doc.developmentType && (
-                    <span style={{
-                      padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 500,
-                      backgroundColor: BADGE_STYLES.docType.bg, color: BADGE_STYLES.docType.text,
-                      border: `1px solid ${BADGE_STYLES.docType.border}`
-                    }}>
-                      {doc.developmentType}
-                    </span>
-                  )}
-                  {/* Domain Badge */}
+                  {/* Document Type Badge - Type-specific colors */}
+                  {doc.developmentType && (() => {
+                    const typeStyle = getDocTypeStyle(doc.developmentType);
+                    const TypeIcon = typeStyle.Icon;
+                    return (
+                      <span style={{
+                        padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 600,
+                        backgroundColor: typeStyle.bg, color: typeStyle.text,
+                        border: `1px solid ${typeStyle.border}`,
+                        display: 'inline-flex', alignItems: 'center', gap: '4px'
+                      }}>
+                        <TypeIcon size={10} />
+                        {doc.developmentType}
+                      </span>
+                    );
+                  })()}
+                  {/* Domain Badge - Always prominent when present */}
                   {doc.domain && (
                     <span style={{
-                      padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 500,
+                      padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 600,
                       backgroundColor: BADGE_STYLES.domain.bg, color: BADGE_STYLES.domain.text,
                       border: `1px solid ${BADGE_STYLES.domain.border}`
                     }}>
@@ -870,17 +874,23 @@ function DocumentModal({ document, onClose }: { document: Document; onClose: () 
                 }}>
                   {new Date(document.publishedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </span>
-                {document.developmentType && (
-                  <span style={{
-                    padding: '3px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 500,
-                    backgroundColor: BADGE_STYLES.docType.bg, color: BADGE_STYLES.docType.text
-                  }}>
-                    {document.developmentType}
-                  </span>
-                )}
+                {document.developmentType && (() => {
+                  const typeStyle = getDocTypeStyle(document.developmentType);
+                  const TypeIcon = typeStyle.Icon;
+                  return (
+                    <span style={{
+                      padding: '3px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 600,
+                      backgroundColor: typeStyle.bg, color: typeStyle.text,
+                      display: 'inline-flex', alignItems: 'center', gap: '4px'
+                    }}>
+                      <TypeIcon size={10} />
+                      {document.developmentType}
+                    </span>
+                  );
+                })()}
                 {document.domain && (
                   <span style={{
-                    padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 500,
+                    padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
                     backgroundColor: BADGE_STYLES.domain.bg, color: BADGE_STYLES.domain.text
                   }}>
                     {document.domain}
