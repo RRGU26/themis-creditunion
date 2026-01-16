@@ -609,6 +609,49 @@ function DailyBriefPanel({ brief, isLoading, history, sentimentData }: { brief: 
             </div>
           )}
 
+          {/* Banking Industry News */}
+          {brief.bankingNews && brief.bankingNews.length > 0 && (
+            <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #E5E7EB' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: 600, color: COLORS.deepNavy, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <Newspaper size={14} style={{ color: '#059669' }} />
+                Banking Industry News
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {brief.bankingNews.slice(0, 10).map((news, idx) => (
+                  <a
+                    key={idx}
+                    href={news.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: '10px 12px',
+                      backgroundColor: COLORS.softGrey,
+                      borderRadius: '6px',
+                      borderLeft: '3px solid #059669',
+                      textDecoration: 'none',
+                      display: 'block',
+                      transition: 'background-color 0.15s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E5E7EB'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.softGrey}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: COLORS.deepNavy, lineHeight: 1.4 }}>
+                        {news.title.length > 80 ? news.title.substring(0, 80) + '...' : news.title}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '10px', color: '#059669', fontWeight: 500 }}>{news.source}</span>
+                      <span style={{ fontSize: '10px', color: '#9CA3AF' }}>
+                        {new Date(news.publishedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Previous Briefs */}
           {history && history.length > 0 && (
             <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #E5E7EB' }}>
