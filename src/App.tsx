@@ -129,7 +129,7 @@ function App() {
             <h1 style={{ fontSize: '18px', fontWeight: 600, margin: 0, letterSpacing: '-0.01em' }}>
               Themis <span style={{ color: COLORS.teal }}>Credit Union Intelligence</span>
             </h1>
-            <p style={{ fontSize: '11px', color: '#9CA3AF', margin: '2px 0 0 0' }}>NCUA Regulatory Monitoring</p>
+            <p style={{ fontSize: '11px', color: '#9CA3AF', margin: '2px 0 0 0' }}>NCUA + Fed + CFPB + FinCEN + OFAC</p>
           </div>
           <button
             onClick={handleRefresh}
